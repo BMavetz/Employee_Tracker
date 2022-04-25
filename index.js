@@ -1,14 +1,28 @@
-const mysql = require('mysql2');
-//connect to database
-const db = mysql.createConnection(
-    {
-        host: 'localhost',
-        user: 'root',
-        password: 'Rangers04',
-        database: ''
-    },
-    console.log(`connected to the ${db.databse} databse`)
-);
-db.query('SELECT id,first_name FROM students', function(err, results){
-    res.json(results)
-});
+const inquirer = require('inquirer');
+require('dotenv').config();
+const {allDept} = require('./db/queryFunctions');
+
+function runApp(){
+
+    inquirer.prompt([
+        {
+            type:"list",
+            name:"userview",
+            message:"Choose what you would like to see",
+            choices:["All_Dept", "All_Roles"]
+        }
+    ])
+    .then((ans)=>{
+        console.log(ans);
+        switch (ans.userview){
+            case 'All_Dept':
+                allDept();
+                break;
+            default:
+                break;
+            }
+        })
+        
+    }
+
+    runApp();

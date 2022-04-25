@@ -1,4 +1,4 @@
-const { table } = require('console');
+//const { table } = require('console');
 const db = require('./connection');
 const getRoles = 'SELECT job_role.id, title, dept_name, salary FROM job_role JOIN department ON job_role.dept_id = department.id;';
 

@@ -1,6 +1,4 @@
-SELECT job_role.id, title, dept_name, salary
-FROM job_role
-JOIN department ON job_role.dept_id = department.id;
+SELECT job_role.id, title, dept_name, salary FROM job_role JOIN department ON job_role.dept_id = department.id;
 
 SELECT e.id, e.first_name, e.last_name, title, dept_name, salary, CONCAT(m.first_name, ' ', m.last_name) AS Manager
 FROM employee e

@@ -5,3 +5,7 @@ FROM employee e
 LEFT JOIN employee m ON e.manager_id = m.id
 JOIN job_role ON e.role_id = job_role.id
 JOIN department ON job_role.dept_id = department.id;
+
+SELECT * 
+FROM employee 
+WHERE concat(first_name,' ',last_name) = ('John Smith');

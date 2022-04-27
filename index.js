@@ -39,6 +39,9 @@ function runApp(){
             case options[5]:
                 mapRole();
                 break;
+            case options[6]:
+                
+                break;    
             case options[7]:
                 process.exit();
             
@@ -63,9 +66,24 @@ function mapRole(){
        const roles = results.map(function(item){
            return item.title;
        });
-       roles.push('none');
+       roles;
        const roleLen = roles.length;
-       getEmpl(roles, roleLen);
+       mapEmpl(roles, roleLen);
+   });
+   }
+
+function mapEmpl(roles, roleLen){
+    db.query('SELECT * FROM employee', function(err, results){
+       const empl = results.map(function(item){
+            //console.log(item.first_name + ' ' + item.last_name); 
+        return item.first_name + ' ' + item.last_name;
+       });
+       empl.push('None');
+       const emplLen = empl.length;
+       getEmpl(roles, roleLen, empl, emplLen)
+    //    roles.push('none');
+    //    const roleLen = roles.length;
+    //    getEmpl(roles, roleLen);
    });
    }
 
@@ -145,7 +163,7 @@ function getRole(dept, length){
         })
     }
 
-    function getEmpl(roles, length){
+    function getEmpl(roles, roleLen, empl, emplLen){
         inquirer.prompt([
            {
                type:"input",
@@ -160,24 +178,42 @@ function getRole(dept, length){
            {
                type:"list",
                name:"roleName",
-               pageSize: length,
+               pageSize: roleLen,
                message:"Please select the role of the employee: ",
                choices: roles                
-           }
+           },
+           {
+            type:"list",
+            name:"Manager",
+            pageSize: emplLen,
+            message:"Please select the manager of the employee.  Select \"none\" if they do not have a manger: ",
+            choices: empl                
+        }
        ])
        .then((ans)=>{
            console.log(ans);
-        //    db.query('select id from department where dept_name = (?)', ans.deptName, function(err, results){
-        //            console.log(results[0].id);
-        //            const id = results[0].id;
-        //            addRole(ans.roleName, ans.salary, id);
-        //    });
-       // db.query('INSERT INTO department (dept_name) VALUES (?)', ans.deptName, function(err, results){
-       //     console.log(results);
-       //     runApp();
-       // })
+           db.query('select id from job_role where title = (?)', ans.roleName, function(err, results){
+                   console.log(results);
+                   const roleID = results[0].id;
+                   db.query('SELECT id FROM employee WHERE concat(first_name,\' \',last_name) = (?)', ans.Manager, function(err, results){
+                    console.log(results);
+                    var mgrID;
+                    if(results.length === 0){
+                        mgrID = null;
+                        console.log(mgrID);
+                    }else{
+                    mgrID = results[0].id;
+                    console.log(roleID);
+                    console.log(mgrID);
+                    }
+                    addEmpl();            });
+           });
    })
    }
+
+function addEmpl(){
+    console.log('hello');
+}
 
 runApp();
    

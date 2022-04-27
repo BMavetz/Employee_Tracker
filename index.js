@@ -37,10 +37,10 @@ function runApp(){
                 mapDept();
                 break;
             case options[5]:
-                mapRole();
+                mapRole(ans.userview);
                 break;
             case options[6]:
-                
+                mapRole(ans.userview);
                 break;    
             case options[7]:
                 process.exit();
@@ -61,30 +61,31 @@ function mapDept(){
 });
 }
 
-function mapRole(){
+function mapRole(action){
     db.query('SELECT * FROM job_role', function(err, results){
        const roles = results.map(function(item){
            return item.title;
        });
        roles;
        const roleLen = roles.length;
-       mapEmpl(roles, roleLen);
+       mapEmpl(roles, roleLen, action);
    });
    }
 
-function mapEmpl(roles, roleLen){
+function mapEmpl(roles, roleLen, action){
     db.query('SELECT * FROM employee', function(err, results){
        const empl = results.map(function(item){
             //console.log(item.first_name + ' ' + item.last_name); 
         return item.first_name + ' ' + item.last_name;
        });
-       empl.push('None');
        const emplLen = empl.length;
-       getEmpl(roles, roleLen, empl, emplLen)
-    //    roles.push('none');
-    //    const roleLen = roles.length;
-    //    getEmpl(roles, roleLen);
-   });
+       if(action === options[5]){
+           empl.push('None');
+           getEmpl(roles, roleLen, empl, emplLen)
+       }else{
+           updateEmplRole(roles, roleLen, empl, emplLen);
+       }
+    });
    }
 
 function allDept(){
@@ -206,13 +207,57 @@ function getRole(dept, length){
                     console.log(roleID);
                     console.log(mgrID);
                     }
-                    addEmpl();            });
+                    addEmpl(ans.firstName, ans.lastName, roleID, mgrID);            
+                });
            });
    })
    }
 
-function addEmpl(){
-    console.log('hello');
+function addEmpl(firstName, lastName, roleID, mgrID){
+    db.query('INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)', [firstName, lastName, roleID, mgrID], function(err, results){
+        console.log(results);
+        runApp();
+    })
+}
+
+function updateEmplRole(roles, roleLen, empl, emplLen){
+    inquirer.prompt([
+         {
+            type:"list",
+            name:"emplName",
+            pageSize: emplLen,
+            message:"What employee\'\s role do you want to update?: ",
+            choices: empl                
+        },
+        {
+         type:"list",
+         name:"newRole",
+         pageSize: roleLen,
+         message:"Please select the new role you would like to assign to the employee: ",
+         choices: roles                
+     }
+    ])
+    .then((ans)=>{
+        console.log(ans);
+        db.query('select id from job_role where title = (?)', ans.newRole, function(err, results){
+                console.log(results);
+                const roleID = results[0].id;
+                db.query('SELECT id FROM employee WHERE concat(first_name,\' \',last_name) = (?)', ans.emplName, function(err, results){
+                 console.log(results);
+                 const emplID = results[0].id;
+                 console.log(roleID);
+                 console.log(emplID);
+                postUpdate(emplID, roleID);            
+             });
+        });
+});
+}
+
+function postUpdate(emplID, roleID){
+    db.query('UPDATE employee SET role_id = ? WHERE id = ?', [roleID, emplID], function (err, results){
+        console.log(results);
+        runApp();
+    })
 }
 
 runApp();

@@ -2,11 +2,10 @@ const inquirer = require('inquirer');
 require('dotenv').config();
 const db = require('./db/connection');
 const cTable = require('console.table');
-//const {allDept, allRoles, allEmployees} = require('./queryFunctions');
 const options = ['View all departments', 'View all roles', 'view all employees', 'add a department', 'add a role', 'add an employee', 'update an employee role', 'Exit Application'];
 const getRoles = 'SELECT job_role.id, title, dept_name, salary FROM job_role JOIN department ON job_role.dept_id = department.id;';
-
 const getEmployees = 'SELECT e.id, e.first_name, e.last_name, title, dept_name, salary, CONCAT(m.first_name, \' \', m.last_name) AS Manager FROM employee e LEFT JOIN employee m ON e.manager_id = m.id JOIN job_role ON e.role_id = job_role.id JOIN department ON job_role.dept_id = department.id;';
+
 function runApp(){
 
     inquirer.prompt([
@@ -19,7 +18,6 @@ function runApp(){
         }
     ])
     .then((ans)=>{
-        console.log(ans);
         switch (ans.userview){
             case options[0]:
                 allDept();        
@@ -75,7 +73,6 @@ function mapRole(action){
 function mapEmpl(roles, roleLen, action){
     db.query('SELECT * FROM employee', function(err, results){
        const empl = results.map(function(item){
-            //console.log(item.first_name + ' ' + item.last_name); 
         return item.first_name + ' ' + item.last_name;
        });
        const emplLen = empl.length;
@@ -119,9 +116,7 @@ function addDept(){
         }
     ])
     .then((ans)=>{
-        console.log(ans.deptName);
     db.query('INSERT INTO department (dept_name) VALUES (?)', ans.deptName, function(err, results){
-        console.log(results);
         runApp();
     })
 })
@@ -148,9 +143,7 @@ function getRole(dept, length){
             }
         ])
         .then((ans)=>{
-            console.log(ans);
             db.query('select id from department where dept_name = (?)', ans.deptName, function(err, results){
-                    console.log(results[0].id);
                     const id = results[0].id;
                     addRole(ans.roleName, ans.salary, id);
             });
@@ -159,7 +152,6 @@ function getRole(dept, length){
 
     function addRole(roleName, salary, id){
         db.query('INSERT INTO job_role (title, salary, dept_id) VALUES (?, ?, ?)', [roleName, salary, id], function(err, results){
-            console.log(results);
             runApp();
         })
     }
@@ -192,20 +184,14 @@ function getRole(dept, length){
         }
        ])
        .then((ans)=>{
-           console.log(ans);
            db.query('select id from job_role where title = (?)', ans.roleName, function(err, results){
-                   console.log(results);
                    const roleID = results[0].id;
                    db.query('SELECT id FROM employee WHERE concat(first_name,\' \',last_name) = (?)', ans.Manager, function(err, results){
-                    console.log(results);
                     var mgrID;
                     if(results.length === 0){
                         mgrID = null;
-                        console.log(mgrID);
                     }else{
                     mgrID = results[0].id;
-                    console.log(roleID);
-                    console.log(mgrID);
                     }
                     addEmpl(ans.firstName, ans.lastName, roleID, mgrID);            
                 });
@@ -215,7 +201,6 @@ function getRole(dept, length){
 
 function addEmpl(firstName, lastName, roleID, mgrID){
     db.query('INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)', [firstName, lastName, roleID, mgrID], function(err, results){
-        console.log(results);
         runApp();
     })
 }
@@ -238,15 +223,10 @@ function updateEmplRole(roles, roleLen, empl, emplLen){
      }
     ])
     .then((ans)=>{
-        console.log(ans);
         db.query('select id from job_role where title = (?)', ans.newRole, function(err, results){
-                console.log(results);
                 const roleID = results[0].id;
                 db.query('SELECT id FROM employee WHERE concat(first_name,\' \',last_name) = (?)', ans.emplName, function(err, results){
-                 console.log(results);
                  const emplID = results[0].id;
-                 console.log(roleID);
-                 console.log(emplID);
                 postUpdate(emplID, roleID);            
              });
         });
@@ -255,7 +235,6 @@ function updateEmplRole(roles, roleLen, empl, emplLen){
 
 function postUpdate(emplID, roleID){
     db.query('UPDATE employee SET role_id = ? WHERE id = ?', [roleID, emplID], function (err, results){
-        console.log(results);
         runApp();
     })
 }

@@ -12,9 +12,10 @@ function runApp(){
     inquirer.prompt([
         {
             type:"list",
+            pageSize: 8,
             name:"userview",
             message:"What you would like to do?",
-            choices:options
+            choices: options
         }
     ])
     .then((ans)=>{
@@ -30,7 +31,13 @@ function runApp(){
                 allEmployees();
                 break;
             case options[3]:
-                mapResults();
+                addDept();
+                break;
+            case options[4]:
+                mapDept();
+                break;
+            case options[5]:
+                mapRole();
                 break;
             case options[7]:
                 process.exit();
@@ -40,16 +47,27 @@ function runApp(){
         })
         
     }
-function mapResults(){
+function mapDept(){
  db.query('SELECT * FROM department', function(err, results){
-    console.log(results);
     const dept_n = results.map(function(item){
-        return item;
+        return item.dept_name;
     });
-    console.log(dept_n);
-    console.table(dept_n);
+    const deptLen = dept_n.length;
+    getRole(dept_n, deptLen);
+
 });
 }
+
+function mapRole(){
+    db.query('SELECT * FROM job_role', function(err, results){
+       const roles = results.map(function(item){
+           return item.title;
+       });
+       roles.push('none');
+       const roleLen = roles.length;
+       getEmpl(roles, roleLen);
+   });
+   }
 
 function allDept(){
     
@@ -72,7 +90,94 @@ function allEmployees(){
         runApp();
     })
     }
-    
+
+function addDept(){
+    inquirer.prompt([
+        {
+            type:"input",
+            name:"deptName",
+            message:"Please enter the name of the department you would like to add: "
+        }
+    ])
+    .then((ans)=>{
+        console.log(ans.deptName);
+    db.query('INSERT INTO department (dept_name) VALUES (?)', ans.deptName, function(err, results){
+        console.log(results);
+        runApp();
+    })
+})
+}
+
+function getRole(dept, length){
+         inquirer.prompt([
+            {
+                type:"input",
+                name:"roleName",
+                message:"Please enter the name of the role you would like to add: "
+            },
+            {
+                type:"input",
+                name:"salary",
+                message:"Please enter the salary for this role: "
+            },
+            {
+                type:"list",
+                name:"deptName",
+                pageSize: length,
+                message:"Please enter the name of the department you would like to add: ",
+                choices: dept                
+            }
+        ])
+        .then((ans)=>{
+            console.log(ans);
+            db.query('select id from department where dept_name = (?)', ans.deptName, function(err, results){
+                    console.log(results[0].id);
+                    const id = results[0].id;
+                    addRole(ans.roleName, ans.salary, id);
+            });
+    })
+    }
+
+    function addRole(roleName, salary, id){
+        db.query('INSERT INTO job_role (title, salary, dept_id) VALUES (?, ?, ?)', [roleName, salary, id], function(err, results){
+            console.log(results);
+            runApp();
+        })
+    }
+
+    function getEmpl(roles, length){
+        inquirer.prompt([
+           {
+               type:"input",
+               name:"firstName",
+               message:"Please enter the first name of the employee: "
+           },
+           {
+               type:"input",
+               name:"lastName",
+               message:"Please enter the last name of the employee: "
+           },
+           {
+               type:"list",
+               name:"roleName",
+               pageSize: length,
+               message:"Please select the role of the employee: ",
+               choices: roles                
+           }
+       ])
+       .then((ans)=>{
+           console.log(ans);
+        //    db.query('select id from department where dept_name = (?)', ans.deptName, function(err, results){
+        //            console.log(results[0].id);
+        //            const id = results[0].id;
+        //            addRole(ans.roleName, ans.salary, id);
+        //    });
+       // db.query('INSERT INTO department (dept_name) VALUES (?)', ans.deptName, function(err, results){
+       //     console.log(results);
+       //     runApp();
+       // })
+   })
+   }
 
 runApp();
    
